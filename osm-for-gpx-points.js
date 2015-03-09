@@ -220,14 +220,14 @@ function displayContents(stylefunc,array_of_array_of_lat_lon) {
 	gmap.getView().setCenter(lonlat2p(first[1], first[0]));
 }
 
-function addLatLonPoint(style)
+function addLatLonPoint(stylefunc)
 {
 	console.log("called addlatlon");
 	var lat = document.getElementById("lattextfield").value;
 	var latfloat = parseFloat(lat);
 	var lon = document.getElementById("lontextfield").value;
 	var lonfloat = parseFloat(lon);
-	addPoint(style,  latfloat, lonfloat, false);
+	addPoint(stylefunc(nextImage()), latfloat, lonfloat, false);
 	gmap.getView().setCenter(lonlat2p(lonfloat, latfloat));
 }
 
