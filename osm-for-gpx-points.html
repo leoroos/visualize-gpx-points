@@ -16,9 +16,20 @@
     <title>OpenLayers 3 example</title>
   </head>
   <body onload="initialize()">
-  <input type="file" id="file1-input">
-  <input type="file" id="file2-input">
-  <input type="file" id="file3-input">
+
+  <div class="row">
+	  <div class="col-md-4">
+		  <input type="file" id="file1-input">
+		  <input type="file" id="file2-input">
+		  <input type="file" id="file3-input">
+	  </div>
+	  <div class="col-md-4">
+		  <label for="lat">lat</label><input type="text" name="lat" value="" id="lattextfield">
+		  <label for="lon">lon</label><input type="text" name="lon" value="" id="lontextfield">
+		  <input type="button" value="load latlon" name="load point" id="latlonbutton"/>
+	  </div>
+  </div>
+
     <div id="map" class="map">
 		<div id="popup"></div>
 	</div>

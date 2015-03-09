@@ -106,7 +106,7 @@ function initialize()
 	// vectorSource.addFeature(f1);
 	// vectorSource.addFeature(f2);
 
-	addPoint(style,37.5,-122, null)
+	// addPoint(style,37.5,-122, null)
 }
 
 function addPoint(style, lat, lon, tags)
@@ -171,8 +171,11 @@ function displaygpxpoints(e,stylefunc) {
 	var reader = new FileReader();
 	reader.onload = function(e) {
 		var contents = e.target.result;
-		array_of_array_of_lat_lon = parseGPXFile(contents);
-		displayContents(stylefunc, array_of_array_of_lat_lon);
+		trksarray = parseGPXFile(contents);
+		for (var i = 0, len = trksarray.length; i < len; i++) {
+			array_of_array_of_lat_lon = trksarray[i];	
+			displayContents(stylefunc, array_of_array_of_lat_lon);
+		}
 	};
 	reader.readAsText(file);
 }
@@ -180,40 +183,52 @@ function displaygpxpoints(e,stylefunc) {
 function parseGPXFile(contents)
 {
 	var parser=new DOMParser();
+	var trksarray = [];
 	var xmlDoc=parser.parseFromString(contents,"text/xml");
-	var children = xmlDoc.getElementsByTagName('trkpt');
-	var array_of_array_of_lat_lon = [];
-	for(var i = 0 ; i < children.length; i++){
-		var trkpt = children[i];
-		var lat = parseFloat(trkpt.getAttribute('lat'));
-		var lon = parseFloat(trkpt.getAttribute('lon'));
-		var tagElements = trkpt.getElementsByTagName('tag');
-		var tags = [];
-		for (var j = 0; j < tagElements.length; j++) {
-			tagEl = tagElements[j];
-			tags.push([tagEl.getAttribute('key'), tagEl.getAttribute('value')]);
+	var trks = xmlDoc.getElementsByTagName('trk');
+	for (var i = 0, len = trks.length; i < len; i++) {
+		var trk=trks[i];
+		var children = trk.getElementsByTagName('trkpt');
+		var array_of_array_of_lat_lon = [];
+		for(var j = 0 ; j < children.length; j++){
+			var trkpt = children[j];
+			var lat = parseFloat(trkpt.getAttribute('lat'));
+			var lon = parseFloat(trkpt.getAttribute('lon'));
+			var tagElements = trkpt.getElementsByTagName('tag');
+			var tags = [];
+			for (var k = 0; k < tagElements.length; k++) {
+				tagEl = tagElements[k];
+				tags.push([tagEl.getAttribute('key'), tagEl.getAttribute('value')]);
+			}
+			array_of_array_of_lat_lon.push([lat,lon, tags]);
 		}
-		array_of_array_of_lat_lon.push([lat,lon, tags]);
+		trksarray.push(array_of_array_of_lat_lon);
 	}
-	return array_of_array_of_lat_lon;
+	return trksarray;
 }
 
 function displayContents(stylefunc,array_of_array_of_lat_lon) {
 	console.log("executing display contents");
 	// var element = document.getElementById('file-content');
-	// element.innerHTML = contents;
-	//
 	var style = stylefunc(nextImage());
 	for (var i = 0, len = array_of_array_of_lat_lon.length; i < len; i++) {
 		lat_lon = array_of_array_of_lat_lon[i];
 		addPoint(style,  lat_lon[0], lat_lon[1], lat_lon[2]);
 	}
-	// makePointLine(gmap, arrayOfLatLon, nextImage());
-	// console.log(xmlDoc);
 	first = array_of_array_of_lat_lon[0];
 	console.log(first)
 	gmap.getView().setCenter(lonlat2p(first[1], first[0]));
+}
 
+function addLatLonPoint(style)
+{
+	console.log("called addlatlon");
+	var lat = document.getElementById("lattextfield").value;
+	var latfloat = parseFloat(lat);
+	var lon = document.getElementById("lontextfield").value;
+	var lonfloat = parseFloat(lon);
+	addPoint(style,  latfloat, lonfloat, false);
+	gmap.getView().setCenter(lonlat2p(lonfloat, latfloat));
 }
 
 document.getElementById('file1-input')
@@ -222,6 +237,8 @@ document.getElementById('file2-input')
   .addEventListener('change', function(e){ displaygpxpoints(e,style2) } , false);
 document.getElementById('file3-input')
   .addEventListener('change', function(e){ displaygpxpoints(e,style3) } , false);
+document.getElementById('latlonbutton')
+  .addEventListener('click', function(e){ addLatLonPoint(style1) } , false);
 
 function registerPopup(){
 	var map = gmap;
