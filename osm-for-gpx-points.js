@@ -1,3 +1,12 @@
+
+if(typeof(String.prototype.trim) === "undefined")
+{
+    String.prototype.trim = function() 
+    {
+        return String(this).replace(/^\s+|\s+$/g, '');
+    };
+}
+
 gmap = null;
 gsource = null;
 imagecount = 0;
@@ -220,6 +229,16 @@ function displayContents(stylefunc,array_of_array_of_lat_lon) {
 	gmap.getView().setCenter(lonlat2p(first[1], first[0]));
 }
 
+function addLatLonTogetherPoint(stylefunc)
+{
+	console.log("called addlatlon");
+	var latlon = document.getElementById("latlontextfield").value.trim();
+	var latlonAr = latlon.split(",")
+	var latfloat = parseFloat(latlonAr[0]);
+	var lonfloat = parseFloat(latlonAr[1]);
+	addLatLonFloates(latfloat, lonfloat, stylefunc);
+}
+
 function addLatLonPoint(stylefunc)
 {
 	console.log("called addlatlon");
@@ -227,6 +246,10 @@ function addLatLonPoint(stylefunc)
 	var latfloat = parseFloat(lat);
 	var lon = document.getElementById("lontextfield").value;
 	var lonfloat = parseFloat(lon);
+	addLatLonFloates(latfloat, lonfloat, stylefunc);
+}
+
+function addLatLonFloates(latfloat, lonfloat, stylefunc) {
 	addPoint(stylefunc(nextImage()), latfloat, lonfloat, false);
 	gmap.getView().setCenter(lonlat2p(lonfloat, latfloat));
 }
@@ -239,6 +262,8 @@ document.getElementById('file3-input')
   .addEventListener('change', function(e){ displaygpxpoints(e,style3) } , false);
 document.getElementById('latlonbutton')
   .addEventListener('click', function(e){ addLatLonPoint(style1) } , false);
+document.getElementById('latlontogetherbutton')
+  .addEventListener('click', function(e){ addLatLonTogetherPoint(style1) } , false);
 
 function registerPopup(){
 	var map = gmap;
