@@ -126,9 +126,11 @@ function addPoint(style, lat, lon, tags)
 	  lat: lat,
 	}
 	if(tags){
-		for(var i = 0; i < tags.length; i++){
-			var tag = tags[i];
-			properties[tag[0]] = tag[1];
+		var keys = Object.keys(tags);
+		properties['tagnames'] = keys
+		for(var i = 0; i < keys.length; i++){
+			var key = keys[i];
+			properties[key] = tags[key];
 		}
 	}
 
@@ -180,13 +182,61 @@ function displaygpxpoints(e,stylefunc) {
 	var reader = new FileReader();
 	reader.onload = function(e) {
 		var contents = e.target.result;
-		trksarray = parseGPXFile(contents);
+		var trksarray = null;
+
+		if(file.name.endsWith(".json")){
+			trksarray = parseJSONFile(contents);
+		}else if(file.name.endsWith(".gpx")){
+			trksarray = parseGPXFile(contents);
+		}
+
 		for (var i = 0, len = trksarray.length; i < len; i++) {
 			array_of_array_of_lat_lon = trksarray[i];	
 			displayContents(stylefunc, array_of_array_of_lat_lon);
 		}
 	};
 	reader.readAsText(file);
+}
+function parseJSONFile(contents)
+{
+	var array_of_array_of_lat_lon = []
+	var parsedJSON = JSON.parse(contents);
+	if(Array.isArray(parsedJSON)){
+		for (var i = 0, len = parsedJSON.length; i < len; i++) {
+			var parsedJSONObj = parsedJSON[i];
+			array_of_array_of_lat_lon.push(parseJSONObjectToLatLonArray(parsedJSONObj));
+		}
+	}else{
+		array_of_array_of_lat_lon.push(parseJSONObjectToLatLonArray(parsedJSONObj));
+	}
+
+	return array_of_array_of_lat_lon;
+}
+
+function parseJSONObjectToLatLonArray(parsedJSONObj){
+	var array_of_array_of_lat_lon = [];
+	var route = parsedJSONObj['route'];
+	for (var i = 0, len = route.length; i < len; i++) {
+		var route_entry = route[i];
+		var lat = parseFloat(route_entry[ 'latitude' ]);
+		var lon = parseFloat(route_entry[ 'longitude' ]);
+		tags = extractTags(route_entry);
+		array_of_array_of_lat_lon.push([lat,lon, tags ]);
+	}
+	return array_of_array_of_lat_lon;
+}
+
+function extractTags(route_entry){
+	var possibletags = [ "time", "speed", "odometer", "wayId", "baseNodeId", "adjNodeId" ];
+	var tags = {};
+	for (var i = 0, len2 = possibletags.length; i < len2; i++) {
+		var tagname = possibletags[i];	
+		var tag_value = route_entry[tagname];
+		if(tag_value){
+			tags[tagname] = tag_value;
+		}
+	}
+	return tags;
 }
 
 function parseGPXFile(contents)
@@ -205,6 +255,7 @@ function parseGPXFile(contents)
 			var lon = parseFloat(trkpt.getAttribute('lon'));
 			var tagElements = trkpt.getElementsByTagName('tag');
 			var tags = [];
+			console.warn("adjust to the way tags are handled with parseJSONFile");
 			for (var k = 0; k < tagElements.length; k++) {
 				tagEl = tagElements[k];
 				tags.push([tagEl.getAttribute('key'), tagEl.getAttribute('value')]);
@@ -295,11 +346,18 @@ function registerPopup(){
 				content += "file: " + origin + "\n";
 			}
 
-			content += "edgeHighway:" + feature.get('edgeHighway') + "\n";
-			content += "edgeName:" + feature.get('edgeName') + "\n";
-			content += "nodeHighway" + feature.get('nodeHighway') + "\n";
-			content += "accuEdgeDistance" + feature.get('accuEdgeDistance') + "\n";
-			content += "distancePointAccu" + feature.get("distancePointAccu") + "\n";
+			var tagnames = feature.get('tagnames');
+
+			for (var i = 0, len = tagnames.length; i < len; i++) {
+				content += tagnames[i] + ":" + feature.get(tagnames[i]) + "\n";
+			}
+			
+
+			// content += "edgeHighway:" + feature.get('edgeHighway') + "\n";
+			// content += "edgeName:" + feature.get('edgeName') + "\n";
+			// content += "nodeHighway" + feature.get('nodeHighway') + "\n";
+			// content += "accuEdgeDistance" + feature.get('accuEdgeDistance') + "\n";
+			// content += "distancePointAccu" + feature.get("distancePointAccu") + "\n";
 
 			$(element).popover({
 				'placement': 'top',
